@@ -65,7 +65,7 @@ func (r *productRepo) GetProductByID(req *models.ProductPrimaryKey) (*models.Pro
 			p.created_at,
 			p.updated_at
 		FROM product as p
-		join category as c on c.id=p.category_id
+		left join category as c on c.id=p.category_id
 		WHERE p.id = $1
 	`
 
