@@ -23,7 +23,27 @@ CREATE TABLE "users" (
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP
 );
+SELECT
+			p.id,
+			p.name,
+			p.price,
+			c.id,         
+			c.title,      
+			c.created_at, 	
+			c.updated_at,
+			p.created_at,
+			p.updated_at
+		
+		FROM product as p
+        join category as c on c.id=p.category_id
+		WHERE p.id = '0b0d4901-9703-4ada-958a-887d274bda99';
+SELECT
+    name,
+    price
 
+from product as p
+join category as c on c.id=p.category_id
 
-
+where p.id ='0b0d4901-9703-4ada-958a-887d274bda99'
+;
 

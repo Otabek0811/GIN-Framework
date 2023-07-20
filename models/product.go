@@ -9,6 +9,14 @@ type CreateProduct struct {
 	Price       int    `json:"price"`
 	Category_id string `json:"category_id"`
 }
+type Product_Category struct{
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Price       int    `json:"price"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+	Category_Data Category `json:"category_data"`
+}
 
 type Product struct {
 	Id          string `json:"id"`

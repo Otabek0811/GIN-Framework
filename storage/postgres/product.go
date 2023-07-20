@@ -46,29 +46,38 @@ func (r *productRepo) CreateProduct(req *models.CreateProduct) (string, error) {
 
 }
 
-func (r *productRepo) GetProductByID(req *models.ProductPrimaryKey) (*models.Product, error) {
+func (r *productRepo) GetProductByID(req *models.ProductPrimaryKey) (*models.Product_Category, error) {
 	var (
-		resp  models.Product
+		resp  models.Product_Category
 		query string
 	)
 
 	query = `
 		SELECT
-			id,
-			name,
-			price,
-			COALESCE(category_id::VARCHAR, ''),
-			created_at,
-			updated_at
-		FROM product
-		WHERE id = $1
+			p.id,
+			p.name,
+			p.price,
+			c.id,         
+			c.title,  
+			c.parent_id,    
+			c.created_at, 	
+			c.updated_at,
+			p.created_at,
+			p.updated_at
+		FROM product as p
+		join category as c on c.id=p.category_id
+		WHERE p.id = $1
 	`
 
 	err := r.db.QueryRow(query, req.Id).Scan(
 		&resp.Id,
 		&resp.Name,
 		&resp.Price,
-		&resp.Category_id,
+		&resp.Category_Data.Id,
+		&resp.Category_Data.Title,
+		&resp.Category_Data.ParentID,
+		&resp.Category_Data.CreatedAt,
+		&resp.Category_Data.UpdatedAt,
 		&resp.CreatedAt,
 		&resp.UpdatedAt,
 	)

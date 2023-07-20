@@ -28,7 +28,7 @@ type CategoryRepoI interface {
 type ProductRepoI interface {
 	CreateProduct(*models.CreateProduct) (string, error)
 	GetListProduct(*models.ProductGetListRequest) (*models.ProductGetListResponse, error)
-	GetProductByID(req *models.ProductPrimaryKey) (*models.Product, error)
+	GetProductByID(req *models.ProductPrimaryKey) (*models.Product_Category, error)
 	UpdateProduct(*models.UpdateProduct) (string, error)
 	DeleteProduct(*models.ProductPrimaryKey) error
 }

@@ -7,18 +7,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
 // Create Product godoc
-//@ID create_product
-//@Router /product [POST]
-//@Summary Create Product
-//@Description Create Product
-//@Tags Product
-//@Accept json
-//@Procedure json
-//@Param product body models.CreateProduct true "ProductRequest"
-//@Success 200 {object} Response{data=string} "Success Request"
-//@Response 400 {object} Response{data=string} "Bad Request"
-//@Failure 500 {object} Response{data=string} "Server Error"
+// @ID create_product
+// @Router /product [POST]
+// @Summary Create Product
+// @Description Create Product
+// @Tags Product
+// @Accept json
+// @Procedure json
+// @Param product body models.CreateProduct true "ProductRequest"
+// @Success 200 {object} Response{data=string} "Success Request"
+// @Response 400 {object} Response{data=string} "Bad Request"
+// @Failure 500 {object} Response{data=string} "Server Error"
 func (h *handler) CreateProduct(c *gin.Context) {
 	var createproduct models.CreateProduct
 
@@ -113,17 +114,17 @@ func (h *handler) GetListProduct(c *gin.Context) {
 }
 
 // Update Product godoc
-//@ID update_product
-//@Router /product [PUT]
-//@Summary Update Product
-//@Description Update Product
-//@Tags Product
-//@Accept json
-//@Procedure json
-//@Param update body models.UpdateProduct true "ProductRequest"
-//@Success 200 {object} Response{data=string} "Success Request"
-//@Response 400 {object} Response{data=string} "Bad Request"
-//@Failure 500 {object} Response{data=string} "Server Error"
+// @ID update_product
+// @Router /product [PUT]
+// @Summary Update Product
+// @Description Update Product
+// @Tags Product
+// @Accept json
+// @Procedure json
+// @Param update body models.UpdateProduct true "ProductRequest"
+// @Success 200 {object} Response{data=string} "Success Request"
+// @Response 400 {object} Response{data=string} "Bad Request"
+// @Failure 500 {object} Response{data=string} "Server Error"
 func (h *handler) UpdateProduct(c *gin.Context) {
 
 	var upProduct models.UpdateProduct
@@ -175,5 +176,3 @@ func (h *handler) DeleteProduct(c *gin.Context) {
 	h.handlerResponse(c, "Delete Product Response", http.StatusOK, nil)
 
 }
-
-
