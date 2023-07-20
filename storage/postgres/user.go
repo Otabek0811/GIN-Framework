@@ -29,7 +29,7 @@ func (r *userRepo) CreateUser(req *models.CreateUser) (string, error) {
 		INSERT INTO users (id, first_name, last_name, balans, updated_at)
 		VALUES ($1, $2, $3, $4, NOW())
 	`
-
+	fmt.Println(req)
 	_, err := r.db.Exec(query,
 		id,
 		req.FirstName,

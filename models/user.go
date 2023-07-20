@@ -12,7 +12,7 @@ type User struct {
 type CreateUser struct {
 	FirstName string  `json:"first_name"`
 	LastName  string  `json:"last_name"`
-	Balans    float64 `json:"balans"`
+	Balans    int `json:"balans"`
 }
 
 type UpdateUser struct {

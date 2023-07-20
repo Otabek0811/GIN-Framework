@@ -1238,7 +1238,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "balans": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "first_name": {
                     "type": "string"
