@@ -79,14 +79,13 @@ func ValMultipleQuery(query string, vals []int32) (string, []interface{}) {
 	return query, params
 }
 
-func InsertMultiple(queryInsert string, id int32, vals []int32) (string, []interface{}) {
+func InsertMultiple(queryInsert string, id string, vals []string) (string, []interface{}) {
 	insertparams := []interface{}{}
 
 	for i, d := range vals {
 		p1 := i * 2 // starting position for insert params
 		queryInsert += fmt.Sprintf("($%d, $%d),", p1+1, p1+2)
-
-		insertparams = append(insertparams, d, id)
+		insertparams = append(insertparams, id, d)
 	}
 
 	queryInsert = queryInsert[:len(queryInsert)-1] // remove trailing ","

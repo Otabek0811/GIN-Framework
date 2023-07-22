@@ -1,34 +1,39 @@
 package storage
 
-import "app/models"
+import (
+	"app/api/models"
+	"context"
+)
 
 type StorageI interface {
 	Close()
-	User() UserRepoI
 	Category() CategoryRepoI
 	Product() ProductRepoI
-}
-
-type UserRepoI interface {
-	CreateUser(*models.CreateUser) (string, error)
-	GetUserByID(*models.UserPrimaryKey) (*models.User, error)
-	GetListUser(*models.UserGetListRequest) (*models.UserGetListResponse, error)
-	UpdateUser(*models.UpdateUser) (string, error)
-	DeleteUser(*models.UserPrimaryKey) error
+	Market() MarketRepoI
 }
 
 type CategoryRepoI interface {
-	CreateCategory(*models.CreateCategory) (string, error)
-	GetCategoryByID(*models.CategoryPrimaryKey) (*models.Category, error)
-	GetCategoryList(*models.CategoryGetListRequest) (*models.CategoryGetListResponse, error)
-	UpdateCategory(*models.UpdateCategory) (string, error)
-	DeleteCategory(*models.CategoryPrimaryKey) error
+	Create(context.Context, *models.CreateCategory) (string, error)
+	GetByID(context.Context, *models.CategoryPrimaryKey) (*models.Category, error)
+	GetList(context.Context, *models.CategoryGetListRequest) (*models.CategoryGetListResponse, error)
+	Update(context.Context, *models.UpdateCategory) (int64, error)
+	Delete(context.Context, *models.CategoryPrimaryKey) error
 }
 
 type ProductRepoI interface {
-	CreateProduct(*models.CreateProduct) (string, error)
-	GetListProduct(*models.ProductGetListRequest) (*models.ProductGetListResponse, error)
-	GetProductByID(req *models.ProductPrimaryKey) (*models.Product_Category, error)
-	UpdateProduct(*models.UpdateProduct) (string, error)
-	DeleteProduct(*models.ProductPrimaryKey) error
+	Create(context.Context, *models.CreateProduct) (string, error)
+	GetByID(context.Context, *models.ProductPrimaryKey) (*models.Product, error)
+	GetList(context.Context, *models.ProductGetListRequest) (*models.ProductGetListResponse, error)
+	Update(context.Context, *models.UpdateProduct) (int64, error)
+	Patch(context.Context, *models.PatchRequest) (int64, error)
+	Delete(context.Context, *models.ProductPrimaryKey) error
+}
+
+type MarketRepoI interface {
+	Create(context.Context, *models.CreateMarket) (string, error)
+	GetByID(context.Context, *models.MarketPrimaryKey) (*models.Market, error)
+	GetList(context.Context, *models.MarketGetListRequest) (*models.MarketGetListResponse, error)
+	Update(context.Context, *models.UpdateMarket) (int64, error)
+	Patch(context.Context, *models.PatchRequest) (int64, error)
+	Delete(context.Context, *models.MarketPrimaryKey) error
 }

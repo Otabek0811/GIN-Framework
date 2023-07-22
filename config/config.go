@@ -20,11 +20,12 @@ type Config struct {
 	ServerHost string
 	HTTPPort   string
 
-	PostgresHost     string
-	PostgresUser     string
-	PostgresDatabase string
-	PostgresPassword string
-	PostgresPort     int
+	PostgresHost          string
+	PostgresUser          string
+	PostgresDatabase      string
+	PostgresPassword      string
+	PostgresPort          int
+	PostgresMaxConnection int32
 
 	DefaultOffset int
 	DefaultLimit  int
@@ -51,6 +52,8 @@ func Load() Config {
 	cfg.PostgresDatabase = cast.ToString(getOrReturnDefaultValue("POSTGRES_DATABASE", "testdb"))
 	cfg.PostgresPassword = cast.ToString(getOrReturnDefaultValue("POSTGRES_PASSWORD", "1234"))
 	cfg.PostgresPort = cast.ToInt(getOrReturnDefaultValue("POSTGRES_PORT", 5432))
+
+	cfg.PostgresMaxConnection = cast.ToInt32(getOrReturnDefaultValue("POSTGRES_PORT", 30))
 
 	cfg.DefaultOffset = cast.ToInt(getOrReturnDefaultValue("OFFSEt", 0))
 	cfg.DefaultLimit = cast.ToInt(getOrReturnDefaultValue("LIMIT", 10))

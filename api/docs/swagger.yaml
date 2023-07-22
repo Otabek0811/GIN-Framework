@@ -14,22 +14,38 @@ definitions:
       title:
         type: string
     type: object
+  models.CreateMarket:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      product_ids:
+        items:
+          type: string
+        type: array
+    type: object
   models.CreateProduct:
     properties:
       category_id:
         type: string
+      market_ids:
+        items:
+          type: string
+        type: array
       name:
         type: string
       price:
-        type: integer
+        type: number
     type: object
-  models.CreateUser:
+  models.PatchRequest:
     properties:
-      balans:
-        type: integer
-      first_name:
-        type: string
-      last_name:
+      fields:
+        additionalProperties: true
+        type: object
+      id:
         type: string
     type: object
   models.UpdateCategory:
@@ -41,27 +57,35 @@ definitions:
       title:
         type: string
     type: object
+  models.UpdateMarket:
+    properties:
+      address:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      product_ids:
+        items:
+          type: string
+        type: array
+    type: object
   models.UpdateProduct:
     properties:
       category_id:
         type: string
       id:
         type: string
+      market_ids:
+        items:
+          type: string
+        type: array
       name:
         type: string
       price:
-        type: integer
-    type: object
-  models.UpdateUser:
-    properties:
-      balans:
         type: number
-      first_name:
-        type: string
-      id:
-        type: string
-      last_name:
-        type: string
     type: object
 info:
   contact: {}
@@ -118,9 +142,9 @@ paths:
       description: Create Category
       operationId: create_category
       parameters:
-      - description: CategoryRequest
+      - description: CreateCategoryRequest
         in: body
-        name: cateogry
+        name: category
         required: true
         schema:
           $ref: '#/definitions/models.CreateCategory'
@@ -144,7 +168,7 @@ paths:
                   type: string
               type: object
         "500":
-          description: Server Error
+          description: Server error
           schema:
             allOf:
             - $ref: '#/definitions/handler.Response'
@@ -153,49 +177,6 @@ paths:
                   type: string
               type: object
       summary: Create Category
-      tags:
-      - Category
-    put:
-      consumes:
-      - application/json
-      description: Update Category
-      operationId: update_category
-      parameters:
-      - description: CategoryRequest
-        in: body
-        name: update
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateCategory'
-      responses:
-        "200":
-          description: Success Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "500":
-          description: Server Error
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: Update Category
       tags:
       - Category
   /category/{id}:
@@ -238,7 +219,7 @@ paths:
                 data:
                   type: string
               type: object
-      summary: DELETE Category
+      summary: Delete Category
       tags:
       - Category
     get:
@@ -283,6 +264,324 @@ paths:
       summary: Get By ID Category
       tags:
       - Category
+    put:
+      consumes:
+      - application/json
+      description: Update Category
+      operationId: update_category
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: UpdateCategoryRequest
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateCategory'
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update Category
+      tags:
+      - Category
+  /market:
+    get:
+      consumes:
+      - application/json
+      description: Get List Market
+      operationId: get_list_market
+      parameters:
+      - description: offset
+        in: query
+        name: offset
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get List Market
+      tags:
+      - Market
+    post:
+      consumes:
+      - application/json
+      description: Create Market
+      operationId: create_market
+      parameters:
+      - description: CreateMarketRequest
+        in: body
+        name: market
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateMarket'
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create Market
+      tags:
+      - Market
+  /market/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Market
+      operationId: delete_market
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete Market
+      tags:
+      - Market
+    get:
+      consumes:
+      - application/json
+      description: Get By ID Market
+      operationId: get_by_id_market
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get By ID Market
+      tags:
+      - Market
+    patch:
+      consumes:
+      - application/json
+      description: Patch Market
+      operationId: patch_market
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: PatchMarketRequest
+        in: body
+        name: market
+        required: true
+        schema:
+          $ref: '#/definitions/models.PatchRequest'
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Patch Market
+      tags:
+      - Market
+    put:
+      consumes:
+      - application/json
+      description: Update Market
+      operationId: update_market
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: UpdateMarketRequest
+        in: body
+        name: market
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateMarket'
+      responses:
+        "200":
+          description: Success Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update Market
+      tags:
+      - Market
   /product:
     get:
       consumes:
@@ -335,7 +634,7 @@ paths:
       description: Create Product
       operationId: create_product
       parameters:
-      - description: ProductRequest
+      - description: CreateProductRequest
         in: body
         name: product
         required: true
@@ -361,7 +660,7 @@ paths:
                   type: string
               type: object
         "500":
-          description: Server Error
+          description: Server error
           schema:
             allOf:
             - $ref: '#/definitions/handler.Response'
@@ -370,49 +669,6 @@ paths:
                   type: string
               type: object
       summary: Create Product
-      tags:
-      - Product
-    put:
-      consumes:
-      - application/json
-      description: Update Product
-      operationId: update_product
-      parameters:
-      - description: ProductRequest
-        in: body
-        name: update
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateProduct'
-      responses:
-        "200":
-          description: Success Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "500":
-          description: Server Error
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: Update Product
       tags:
       - Product
   /product/{id}:
@@ -455,7 +711,7 @@ paths:
                 data:
                   type: string
               type: object
-      summary: DELETE Product
+      summary: Delete Product
       tags:
       - Product
     get:
@@ -500,21 +756,23 @@ paths:
       summary: Get By ID Product
       tags:
       - Product
-  /user:
-    get:
+    patch:
       consumes:
       - application/json
-      description: Get List User
-      operationId: get_list_user
+      description: Patch Product
+      operationId: patch_product
       parameters:
-      - description: offset
-        in: query
-        name: offset
+      - description: id
+        in: path
+        name: id
+        required: true
         type: string
-      - description: limit
-        in: query
-        name: limit
-        type: string
+      - description: PatchProductRequest
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.PatchRequest'
       responses:
         "200":
           description: Success Request
@@ -543,107 +801,26 @@ paths:
                 data:
                   type: string
               type: object
-      summary: Get List User
+      summary: Patch Product
       tags:
-      - User
-    post:
-      consumes:
-      - application/json
-      description: Create User
-      operationId: create_user
-      parameters:
-      - description: UserRequest
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateUser'
-      responses:
-        "200":
-          description: Success Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "500":
-          description: Server Error
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: Create User
-      tags:
-      - User
+      - Product
     put:
       consumes:
       - application/json
-      description: Update User
-      operationId: update_user
+      description: Update Product
+      operationId: update_product
       parameters:
-      - description: UserRequest
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: UpdateProductRequest
         in: body
-        name: update
+        name: product
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateUser'
-      responses:
-        "200":
-          description: Success Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "500":
-          description: Server Error
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: Update User
-      tags:
-      - User
-  /user/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete User
-      operationId: delete_user
-      parameters:
-      - description: id
-        in: path
-        name: id
-        required: true
-        type: string
+          $ref: '#/definitions/models.UpdateProduct'
       responses:
         "200":
           description: Success Request
@@ -672,49 +849,7 @@ paths:
                 data:
                   type: string
               type: object
-      summary: DELETE User
+      summary: Update Product
       tags:
-      - User
-    get:
-      consumes:
-      - application/json
-      description: Get By ID User
-      operationId: get_by_id_user
-      parameters:
-      - description: id
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: Success Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "500":
-          description: Server error
-          schema:
-            allOf:
-            - $ref: '#/definitions/handler.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: Get By ID User
-      tags:
-      - User
+      - Product
 swagger: "2.0"

@@ -1,25 +1,27 @@
 package postgres
 
 import (
-	"app/models"
+	"app/api/models"
 	"app/pkg/helper"
+	"context"
 	"database/sql"
 	"fmt"
 
 	uuid "github.com/google/uuid"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type categoryRepo struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
-func NewCategoryRepo(db *sql.DB) *categoryRepo {
+func NewCategoryRepo(db *pgxpool.Pool) *categoryRepo {
 	return &categoryRepo{
 		db: db,
 	}
 }
 
-func (r *categoryRepo) CreateCategory(req *models.CreateCategory) (string, error) {
+func (r *categoryRepo) Create(ctx context.Context, req *models.CreateCategory) (string, error) {
 
 	var (
 		id    = uuid.New().String()
@@ -31,7 +33,7 @@ func (r *categoryRepo) CreateCategory(req *models.CreateCategory) (string, error
 		VALUES ($1, $2, $3, NOW())
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.Exec(ctx, query,
 		id,
 		req.Title,
 		helper.NewNullString(req.ParentID),
@@ -44,40 +46,51 @@ func (r *categoryRepo) CreateCategory(req *models.CreateCategory) (string, error
 	return id, nil
 }
 
-func (r *categoryRepo) GetCategoryByID(req *models.CategoryPrimaryKey) (*models.Category, error) {
+func (r *categoryRepo) GetByID(ctx context.Context, req *models.CategoryPrimaryKey) (*models.Category, error) {
 
 	var (
-		resp  models.Category
 		query string
+
+		id        sql.NullString
+		title     sql.NullString
+		parentId  sql.NullString
+		createdAt sql.NullString
+		updatedAt sql.NullString
 	)
 
 	query = `
 		SELECT
 			id,
 			title,
-			COALESCE(parent_id::VARCHAR, ''),
+			parent_id,
 			created_at,
 			updated_at
 		FROM category
 		WHERE id = $1
 	`
 
-	err := r.db.QueryRow(query, req.Id).Scan(
-		&resp.Id,
-		&resp.Title,
-		&resp.ParentID,
-		&resp.CreatedAt,
-		&resp.UpdatedAt,
+	err := r.db.QueryRow(ctx, query, req.Id).Scan(
+		&id,
+		&title,
+		&parentId,
+		&createdAt,
+		&updatedAt,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &resp, nil
+	return &models.Category{
+		Id:        id.String,
+		Title:     title.String,
+		ParentID:  parentId.String,
+		CreatedAt: createdAt.String,
+		UpdatedAt: updatedAt.String,
+	}, nil
 }
 
-func (r *categoryRepo) GetCategoryList(req *models.CategoryGetListRequest) (*models.CategoryGetListResponse, error) {
+func (r *categoryRepo) GetList(ctx context.Context, req *models.CategoryGetListRequest) (*models.CategoryGetListResponse, error) {
 
 	var (
 		resp   = &models.CategoryGetListResponse{}
@@ -112,71 +125,84 @@ func (r *categoryRepo) GetCategoryList(req *models.CategoryGetListRequest) (*mod
 
 	query += where + offset + limit
 
-	rows, err := r.db.Query(query)
+	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
 		var (
-			category models.Category
-			parentId sql.NullString
+			id        sql.NullString
+			title     sql.NullString
+			parentId  sql.NullString
+			createdAt sql.NullString
+			updatedAt sql.NullString
 		)
+
 		err := rows.Scan(
 			&resp.Count,
-			&category.Id,
-			&category.Title,
+			&id,
+			&title,
 			&parentId,
-			&category.CreatedAt,
-			&category.UpdatedAt,
+			&createdAt,
+			&updatedAt,
 		)
 
 		if err != nil {
 			return nil, err
 		}
 
-		category.ParentID = parentId.String
-		resp.Categories = append(resp.Categories, &category)
+		resp.Categories = append(resp.Categories, &models.Category{
+			Id:        id.String,
+			Title:     title.String,
+			ParentID:  parentId.String,
+			CreatedAt: createdAt.String,
+			UpdatedAt: updatedAt.String,
+		})
 	}
 
 	return resp, nil
 }
 
+func (r *categoryRepo) Update(ctx context.Context, req *models.UpdateCategory) (int64, error) {
 
-func (r *categoryRepo) UpdateCategory(req *models.UpdateCategory) (string, error) {
 	var (
-		id    = req.Id
-		query string
+		query  string
+		params map[string]interface{}
 	)
 
 	query = `
-		Update category set title = $1, parent_id= $2, updated_at= NOW() where id = $3
+		UPDATE
+			category
+		SET
+			title = :title,
+			parent_id = :parent_id,
+			updated_at = NOW()
+		WHERE id = :id
 	`
-	_, err := r.db.Exec(query,
-		req.Title,
-		helper.NewNullString(req.ParentID),
-		id,
-	)
 
-	if err != nil {
-		return "", err
+	params = map[string]interface{}{
+		"id":        req.Id,
+		"title":     req.Title,
+		"parent_id": helper.NewNullString(req.ParentID),
 	}
-	return id, nil
 
+	query, args := helper.ReplaceQueryParams(query, params)
+
+	result, err := r.db.Exec(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.RowsAffected(), nil
 }
 
-func (r *categoryRepo) DeleteCategory(req *models.CategoryPrimaryKey) error {
-	var (
-		id    = req.Id
-		query string
-	)
+func (r *categoryRepo) Delete(ctx context.Context, req *models.CategoryPrimaryKey) error {
 
-	query = `
-		DElETE FROM category where id = $1
-	`
-	_, err := r.db.Exec(query, id)
+	_, err := r.db.Exec(ctx, "DELETE FROM category WHERE id = $1", req.Id)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

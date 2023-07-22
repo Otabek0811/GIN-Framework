@@ -13,17 +13,17 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type productRepo struct {
+type marketRepo struct {
 	db *pgxpool.Pool
 }
 
-func NewProductRepo(db *pgxpool.Pool) *productRepo {
-	return &productRepo{
+func NewMarketRepo(db *pgxpool.Pool) *marketRepo {
+	return &marketRepo{
 		db: db,
 	}
 }
 
-func (r *productRepo) Create(ctx context.Context, req *models.CreateProduct) (string, error) {
+func (r *marketRepo) Create(ctx context.Context, req *models.CreateMarket) (string, error) {
 
 	trx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -44,15 +44,15 @@ func (r *productRepo) Create(ctx context.Context, req *models.CreateProduct) (st
 	)
 
 	query = `
-		INSERT INTO product(id, name, price, category_id, updated_at)
+		INSERT INTO market(id, name, address, phone_number, updated_at)
 		VALUES ($1, $2, $3, $4, NOW())
 	`
 
 	_, err = trx.Exec(ctx, query,
 		id,
 		req.Name,
-		req.Price,
-		helper.NewNullString(req.CategoryId),
+		req.Address,
+		req.PhoneNumber,
 	)
 
 	if err != nil {
@@ -60,13 +60,13 @@ func (r *productRepo) Create(ctx context.Context, req *models.CreateProduct) (st
 	}
 
 	// Market to Product Relation -> Many to Many
-	if len(req.MarketIds) > 0 {
+	if len(req.ProductIds) > 0 {
 		marketProductInsertQuery := `
 			INSERT INTO 
-				market_product_relation(product_id, market_id) 
+				market_product_relation(market_id, product_id) 
 			VALUES`
 
-		marketProductInsertQuery, args := helper.InsertMultiple(marketProductInsertQuery, id, req.MarketIds)
+		marketProductInsertQuery, args := helper.InsertMultiple(marketProductInsertQuery, id, req.ProductIds)
 		_, err = trx.Exec(ctx, marketProductInsertQuery, args...)
 		if err != nil {
 			return "", err
@@ -76,19 +76,19 @@ func (r *productRepo) Create(ctx context.Context, req *models.CreateProduct) (st
 	return id, nil
 }
 
-func (r *productRepo) GetByID(ctx context.Context, req *models.ProductPrimaryKey) (*models.Product, error) {
+func (r *marketRepo) GetByID(ctx context.Context, req *models.MarketPrimaryKey) (*models.Market, error) {
 
 	var (
 		query string
 
-		id         sql.NullString
-		name       sql.NullString
-		price      sql.NullFloat64
-		categoryID sql.NullString
-		createdAt  sql.NullString
-		updatedAt  sql.NullString
+		id          sql.NullString
+		name        sql.NullString
+		address     sql.NullString
+		phoneNumber sql.NullString
+		createdAt   sql.NullString
+		updatedAt   sql.NullString
 
-		marketObj pgtype.JSONB
+		productObj pgtype.JSONB
 	)
 
 	query = `
@@ -96,68 +96,68 @@ func (r *productRepo) GetByID(ctx context.Context, req *models.ProductPrimaryKey
 			SELECT
 				JSON_AGG(
 					JSON_BUILD_OBJECT (
-						'id', m.id,
-						'name', m.name,
-						'address', m.address,
-						'phone_number', m.phone_number,
-						'created_at', m.created_at,
-						'updated_at', m.updated_at
+						'id', p.id,
+						'name', p.name,
+						'price', p.price,
+						'category_id', p.category_id,
+						'created_at', p.created_at,
+						'updated_at', p.updated_at
 					)
-				)  AS markets,
-				mpr.product_id AS product_id
+				)  AS products,
+				mpr.market_id AS market_id
 
-			FROM market AS m
-			JOIN market_product_relation AS mpr ON mpr.market_id = m.id
-			WHERE mpr.product_id = $1
-			GROUP BY mpr.product_id
+			FROM product AS p
+			JOIN market_product_relation AS mpr ON mpr.product_id = p.id
+			WHERE mpr.market_id = $1
+			GROUP BY mpr.market_id
 		)
 		SELECT
-			p.id,
-			p.name,
-			p.price,
-			p.category_id,
-			p.created_at,
-			p.updated_at,
+			m.id,
+			m.name,
+			m.address,
+			m.phone_number,
+			m.created_at,
+			m.updated_at,
 
-			mp.markets
+			mp.products
 			
-		FROM product AS p
-		LEFT JOIN market_product AS mp ON mp.product_id = p.id
-		WHERE p.id =  $1
+		FROM market AS m
+		LEFT JOIN market_product AS mp ON mp.market_id = m.id
+		WHERE m.id =  $1
 	`
 
 	err := r.db.QueryRow(ctx, query, req.Id).Scan(
 		&id,
 		&name,
-		&price,
-		&categoryID,
+		&address,
+		&phoneNumber,
 		&createdAt,
 		&updatedAt,
-		&marketObj,
+		&productObj,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	markets := []*models.Market{}
-	marketObj.AssignTo(&markets)
+	products := []*models.Product{}
+	productObj.AssignTo(&products)
 
-	return &models.Product{
-		Id:         id.String,
-		Name:       name.String,
-		Price:      price.Float64,
-		CategoryId: categoryID.String,
-		CreatedAt:  createdAt.String,
-		UpdatedAt:  updatedAt.String,
-		Markets:    markets,
+	return &models.Market{
+		Id:          id.String,
+		Name:        name.String,
+		Address:     address.String,
+		PhoneNumber: phoneNumber.String,
+		CreatedAt:   createdAt.String,
+		UpdatedAt:   updatedAt.String,
+		Products:    products,
 	}, nil
 }
 
-func (r *productRepo) GetList(ctx context.Context, req *models.ProductGetListRequest) (*models.ProductGetListResponse, error) {
+func (r *marketRepo) GetList(ctx context.Context, req *models.MarketGetListRequest) (*models.MarketGetListResponse, error) {
 
 	var (
-		resp   = &models.ProductGetListResponse{}
+		resp   = &models.MarketGetListResponse{}
 		query  string
 		where  = " WHERE TRUE"
 		offset = " OFFSET 0"
@@ -169,11 +169,11 @@ func (r *productRepo) GetList(ctx context.Context, req *models.ProductGetListReq
 			COUNT(*) OVER(),
 			id,
 			name,
-			price,
-			category_id,
+			address,
+			phone_number,
 			created_at,
 			updated_at
-		FROM product
+		FROM market
 	`
 
 	if req.Offset > 0 {
@@ -197,20 +197,20 @@ func (r *productRepo) GetList(ctx context.Context, req *models.ProductGetListReq
 
 	for rows.Next() {
 		var (
-			id         sql.NullString
-			name       sql.NullString
-			price      sql.NullFloat64
-			categoryID sql.NullString
-			createdAt  sql.NullString
-			updatedAt  sql.NullString
+			id          sql.NullString
+			name        sql.NullString
+			address     sql.NullString
+			phoneNumber sql.NullString
+			createdAt   sql.NullString
+			updatedAt   sql.NullString
 		)
 
 		err := rows.Scan(
 			&resp.Count,
 			&id,
 			&name,
-			&price,
-			&categoryID,
+			&address,
+			&phoneNumber,
 			&createdAt,
 			&updatedAt,
 		)
@@ -219,21 +219,20 @@ func (r *productRepo) GetList(ctx context.Context, req *models.ProductGetListReq
 			return nil, err
 		}
 
-		resp.Products = append(resp.Products, &models.Product{
-			Id:         id.String,
-			Name:       name.String,
-			Price:      price.Float64,
-			CategoryId: categoryID.String,
-			CreatedAt:  createdAt.String,
-			UpdatedAt:  updatedAt.String,
+		resp.Markets = append(resp.Markets, &models.Market{
+			Id:          id.String,
+			Name:        name.String,
+			Address:     address.String,
+			PhoneNumber: phoneNumber.String,
+			CreatedAt:   createdAt.String,
+			UpdatedAt:   updatedAt.String,
 		})
 	}
 
 	return resp, nil
 }
 
-func (r *productRepo) Update(ctx context.Context, req *models.UpdateProduct) (int64, error) {
-
+func (r *marketRepo) Update(ctx context.Context, req *models.UpdateMarket) (int64, error) {
 	trx, err := r.db.Begin(ctx)
 	if err != nil {
 		return 0, nil
@@ -254,20 +253,20 @@ func (r *productRepo) Update(ctx context.Context, req *models.UpdateProduct) (in
 
 	query = `
 		UPDATE
-			product
+			market
 		SET
 			name = :name,
-			price = :price,
-			category_id = :category_id,
+			address = :address,
+			phone_number = :phone_number,
 			updated_at = NOW()
 		WHERE id = :id
 	`
 
 	params = map[string]interface{}{
-		"id":          req.Id,
-		"name":        req.Name,
-		"price":       req.Price,
-		"category_id": req.CategoryId,
+		"id":           req.Id,
+		"name":         req.Name,
+		"address":      req.Address,
+		"phone_number": req.PhoneNumber,
 	}
 
 	query, args := helper.ReplaceQueryParams(query, params)
@@ -278,7 +277,7 @@ func (r *productRepo) Update(ctx context.Context, req *models.UpdateProduct) (in
 	}
 
 	// Market to Product Relation -> Many to Many
-	if len(req.MarketIds) > 0 {
+	if len(req.ProductIds) > 0 {
 		var count int
 		marketProductRelationCountQuery := `
 			SELECT COUNT(*) FROM market_product_relation WHERE market_id = $1 
@@ -302,10 +301,10 @@ func (r *productRepo) Update(ctx context.Context, req *models.UpdateProduct) (in
 
 		marketProductInsertQuery := `
 				INSERT INTO 
-					market_product_relation(product_id, market_id) 
+					market_product_relation(market_id, product_id) 
 				VALUES`
 
-		marketProductInsertQuery, args := helper.InsertMultiple(marketProductInsertQuery, req.Id, req.MarketIds)
+		marketProductInsertQuery, args := helper.InsertMultiple(marketProductInsertQuery, req.Id, req.ProductIds)
 		_, err = trx.Exec(ctx, marketProductInsertQuery, args...)
 		if err != nil {
 			return 0, err
@@ -315,7 +314,7 @@ func (r *productRepo) Update(ctx context.Context, req *models.UpdateProduct) (in
 	return result.RowsAffected(), nil
 }
 
-func (r *productRepo) Patch(ctx context.Context, req *models.PatchRequest) (int64, error) {
+func (r *marketRepo) Patch(ctx context.Context, req *models.PatchRequest) (int64, error) {
 
 	var (
 		query string
@@ -332,7 +331,7 @@ func (r *productRepo) Patch(ctx context.Context, req *models.PatchRequest) (int6
 
 	query = `
 		UPDATE
-			product
+			market
 		SET ` + set + ` updated_at = now()
 		WHERE id = :id
 	`
@@ -350,14 +349,14 @@ func (r *productRepo) Patch(ctx context.Context, req *models.PatchRequest) (int6
 	return result.RowsAffected(), nil
 }
 
-func (r *productRepo) Delete(ctx context.Context, req *models.ProductPrimaryKey) error {
+func (r *marketRepo) Delete(ctx context.Context, req *models.MarketPrimaryKey) error {
 
-	_, err := r.db.Exec(ctx, "DELETE FROM market_product_relation WHERE product_id = $1", req.Id)
+	_, err := r.db.Exec(ctx, "DELETE FROM market_product_relation WHERE market_id = $1", req.Id)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.db.Exec(ctx, "DELETE FROM product WHERE id = $1", req.Id)
+	_, err = r.db.Exec(ctx, "DELETE FROM market WHERE id = $1", req.Id)
 	if err != nil {
 		return err
 	}
